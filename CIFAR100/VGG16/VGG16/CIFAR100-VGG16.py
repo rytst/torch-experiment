@@ -8,7 +8,7 @@ DATA_DIR = "../../data"
 
 # Hyperparameters
 ##################
-EPOCHS = 10
+EPOCHS = 30
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-4
 ##################
