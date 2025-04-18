@@ -8,9 +8,9 @@ DATA_DIR = "../../data"
 
 # Hyperparameters
 ##################
-EPOCHS = 10
+EPOCHS = 30
 BATCH_SIZE = 64
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-3
 ##################
 
 # Loss function
@@ -46,10 +46,10 @@ if __name__ == "__main__":
     train_loader = load_data(train=True)
     test_loader = load_data(train=False)
 
-    vgg16 = torchvision.models.vgg16()
-    vgg16.to(device)
+    resnet18 = torchvision.models.resnet18()
+    resnet18.to(device)
 
-    optimizer = torch.optim.Adam(vgg16.parameters(), lr=LEARNING_RATE)
+    optimizer = torch.optim.Adam(resnet18.parameters(), lr=LEARNING_RATE)
 
     metric = MulticlassAccuracy(device=device)
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             # zero the parameter gradients
             optimizer.zero_grad()
 
-            outputs = vgg16(inputs.to(device))
+            outputs = resnet18(inputs.to(device))
             loss = criterion(outputs, labels.to(device))
             loss.backward()
             optimizer.step()
@@ -78,12 +78,12 @@ if __name__ == "__main__":
                 running_loss = 0.0
     print("Finished Training")
 
-    vgg16.eval()
+    resnet18.eval()
     metric = MulticlassAccuracy(device=device)
     with torch.no_grad():
         for data in test_loader:
             inputs, labels = data
-            outputs = vgg16(inputs.to(device))
+            outputs = resnet18(inputs.to(device))
 
             _, predicted = torch.max(outputs.data, 1)
 
