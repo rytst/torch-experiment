@@ -7,7 +7,7 @@ DATA_DIR = "../data"
 # Hyperparameters
 ##################
 EPOCHS = 10
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 ##################
 
 # Loss function
@@ -28,13 +28,20 @@ def load_data(train=True, data_dir=DATA_DIR):
         root=data_dir, train=train, download=True, transform=transform
     )
 
-    return dataset
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=BATCH_SIZE, shuffle=train, num_workers=6
+    )
+
+    return dataloader
 
 
 # Main block
 if __name__ == "__main__":
     # Get device info
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    train_loader = load_data(train=True)
+    test_loader = load_data(train=False)
 
     vgg16 = torchvision.models.vgg16()
     vgg16.to(device)
@@ -44,3 +51,28 @@ if __name__ == "__main__":
     for epoch in range(EPOCHS):
         # Loss for one eopch
         running_loss = 0.0
+
+        for i, data in enumerate(train_loader, start=0):
+            inputs, labels = data
+
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            outputs = vgg16(inputs.to(device))
+            loss = criterion(outputs, labels.to(device))
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            if i % 100 == 99:
+                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
+                running_loss = 0.0
+    print("Finished Training")
+
+    vgg16.eval()
+    with torch.no_grad():
+        for data in test_loader:
+            inputs, labels = data
+            outputs = vgg16(inputs.to(device))
+
+            _, predicted = torch.max(outputs.data, 1)
